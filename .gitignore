@@ -13,5 +13,8 @@
 # virtual env
 multi_feature_plot_env
 
-# scratch script
-scratch.py
+# .ipynb_checkpoints
+.ipynb_checkpoints
+
+# working jupyter notebook
+multi_feature_plot_notebook.ipynb

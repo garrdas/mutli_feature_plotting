@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime
+from dateutil import parser
 import os
 
 
@@ -11,16 +12,27 @@ def id_files(path, suffix):
 
 def format_input_features(cols1):
     new_cols = list(map(str.lower, cols1))
-    print(new_cols)
     return new_cols
 
 
 def format_data_headers(loc1):
-    df = pd.read_csv(loc1, delimiter='\s+')
-    df.columns = map(str.lower, df.columns)
-    new_filename = loc1.replace('.txt', '') + '.csv'
-    df.to_csv(new_filename, index=False)
-    return new_filename
+    if loc1.endswith('.csv'):
+        df = pd.read_csv(loc1)
+        df.columns = map(str.lower, df.columns)
+        df.to_csv(loc1, index=False)
+        return loc1
+    elif loc1.endswith('.txt'):
+        df = pd.read_csv(loc1, delimiter='\s+')
+        df.columns = map(str.lower, df.columns)
+        new_filename = loc1.replace('.txt', '.csv')
+        df.to_csv(new_filename, index=False)
+        return new_filename
+    else:
+        df = pd.read_csv(loc1, delimiter='\s+')
+        df.columns = map(str.lower, df.columns)
+        new_filename = loc1 + '.csv'
+        df.to_csv(new_filename, index=False)
+        return new_filename
 
 
 def prove_usecols(loc2, cols2):
@@ -30,7 +42,10 @@ def prove_usecols(loc2, cols2):
 
 
 def retrieve_data(loc3, cols3):
-    df = pd.read_csv(loc3, parse_dates=[[0, 1]], usecols=cols3)
+    # custom_date_parser = lambda x: parser.parse(x, ignoretz=True)  # ignore timezone altogether
+    tzinfos = {"EST": -14400}  # 4 hours behind UTC in seconds (1 hour behind would be -3600)
+    custom_date_parser = lambda x: parser.parse(x, tzinfos=tzinfos)
+    df = pd.read_csv(loc3, usecols=cols3, parse_dates=[0], date_parser=custom_date_parser)
     return df
 
 
@@ -38,7 +53,7 @@ def generate_plots(df):
     # credit to Randal Olson for this multi-line plot method:
     # http://www.randalolson.com/2014/06/28/how-to-make-beautiful-data-visualizations-in-python-with-matplotlib/
     features = list(df.columns.values)
-    features.remove('date_time')
+    features.remove('record_timestamp')
 
     # These are the "Tableau 20" colors as RGB.
     tableau20 = [(31, 119, 180), (174, 199, 232), (255, 127, 14), (255, 187, 120),
@@ -62,7 +77,7 @@ def generate_plots(df):
     ax.get_yaxis().tick_left()
 
     for num, feature in enumerate(features):
-        plt.plot(df['date_time'].values,
+        plt.plot(df['record_timestamp'].values,
                  df[feature].values,
                  label=feature,
                  lw=2.5,
@@ -72,23 +87,32 @@ def generate_plots(df):
 
     current_date = str(datetime.now().date().strftime("%d-%m-%Y"))
     current_time = str(datetime.now().time().strftime("%H.%M.%S"))
-    plt.savefig('plot-name-' + current_date + '-' + current_time + '.png', bbox_inches="tight")
+    plt.savefig('plot' + '-' + current_date + '-' + current_time + '.png', bbox_inches="tight")
     return
 
 
-def multi_feature_plot(data_location, feature_list, suffix='.txt'):
+def multi_feature_plot(data_location, feature_list, suffix='.csv'):
     filenames = id_files(data_location, suffix)
     features = format_input_features(feature_list)
     for filename in filenames:
-        file = format_data_headers(filename)
-        if not prove_usecols(file, features):
-            raise ValueError('All column names passed are not found in data headers')
+        if os.path.getsize(filename) > 10000:
+            file = format_data_headers(filename)
+            if not prove_usecols(file, features):
+                print('Error at prove_usecols. All column names passed are not found in data headers')
+                print('Skipping {} to avoid ValueError exception'.format(file))
+                continue
+            else:
+                data = retrieve_data(file, features)
+                generate_plots(data)
         else:
-            data = retrieve_data(file, features)
-            generate_plots(data)
+            print('Skipped {} because file was too small, likely empty'.format(filename))
 
 
 if __name__ == '__main__':
-    col_headers = ['date', 'time']
+    col_headers = [
+        'record_timestamp'
+    ]
+
     location = str(os.getcwd())
+
     multi_feature_plot(location, col_headers)
