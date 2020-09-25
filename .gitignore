@@ -1,0 +1,17 @@
+# txt files
+*.txt
+
+# csv files
+*.csv
+
+# .idea directory
+.idea
+
+# virtual env
+multi_feature_plot_env
+
+# scratch script
+scratch.py
+
+# png images
+*.png
