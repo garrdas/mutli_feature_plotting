@@ -4,7 +4,7 @@ from datetime import datetime
 import os
 
 
-def id_files(path, suffix='.txt'):
+def id_files(path, suffix):
     filenames = os.listdir(path)
     return [path+os.sep+filename for filename in filenames if filename.endswith(suffix)]
 
@@ -76,8 +76,8 @@ def generate_plots(df):
     return
 
 
-def multi_feature_plot(data_location, feature_list):
-    filenames = id_files(data_location)
+def multi_feature_plot(data_location, feature_list, suffix='.txt'):
+    filenames = id_files(data_location, suffix)
     features = format_input_features(feature_list)
     for filename in filenames:
         file = format_data_headers(filename)

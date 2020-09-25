@@ -4,6 +4,9 @@
 # csv files
 *.csv
 
+# png images
+*.png
+
 # .idea directory
 .idea
 
@@ -12,6 +15,3 @@ multi_feature_plot_env
 
 # scratch script
 scratch.py
-
-# png images
-*.png
