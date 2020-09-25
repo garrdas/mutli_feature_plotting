@@ -7,6 +7,8 @@ The user should not pass more than 20 features because it will break the code an
 
 This is set up for time series data, it expects a 'date' column and a 'time' column in the first two columns of the data file. It will concat these two columns and use them as the x-axis or independent variable on the plot.
 
+The output is a .png with the plot.
+
 ## Inputs
 1. path to directory containing data files
 2. list of features (or column headers) you want to plot
